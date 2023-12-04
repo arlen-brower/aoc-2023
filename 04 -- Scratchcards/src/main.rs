@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::env;
 use std::fs;
 
@@ -20,8 +21,13 @@ fn main() {
 
     let mut game_id = 1;
     let mut score_sum = 0;
+    let mut card_map: HashMap<i32, i32> = HashMap::new();
+
+    for i in 1..=games.len() {
+        card_map.insert(i.try_into().unwrap(), 1);
+    }
+
     for game in games {
-        // println!("{game}");
         let (winning, owned_nums): (&str, &str) = match game.split_once('|') {
             Some((win, own)) => (win, own),
             None => ("ERR", "ERR"),
@@ -46,6 +52,20 @@ fn main() {
             }
         }
 
+        for gid in game_id + 1..=game_id + matches {
+            let num_cards: &i32 = match card_map.get(&game_id) {
+                Some(value) => &value,
+                None => &1,
+            };
+
+            let copy_card = match card_map.get(&gid) {
+                Some(value) => &value,
+                None => &1,
+            };
+
+            card_map.insert(gid, copy_card + num_cards);
+        }
+
         let base: i32 = 2;
         let mut score = 0;
         if matches >= 1 {
@@ -56,5 +76,15 @@ fn main() {
         game_id = game_id + 1;
         score_sum = score_sum + score;
     }
+
+    println!();
+
+    let mut copy_sum = 0;
+    for (gid, n) in card_map {
+        println!("Game {gid} : {n}");
+        copy_sum = copy_sum + n;
+    }
+
     println!("Part 1) Total Score = {score_sum}");
+    println!("Part 2) Total Cards = {copy_sum}");
 }
