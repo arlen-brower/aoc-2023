@@ -6,7 +6,7 @@ fn main() {
     let binding = fs::read_to_string(file_path).expect("Should have been able to read the file");
     let contents = binding.trim_end();
 
-    let lines: Vec<Vec<i64>> = contents
+    let mut lines: Vec<Vec<i64>> = contents
         .lines()
         .map(|l| {
             l.split(char::is_whitespace)
@@ -16,20 +16,14 @@ fn main() {
         .collect();
 
     let part_one: Vec<i64> = lines.iter().map(|l| find_next_num(&l[..])).collect();
-    let sum: i64 = part_one.iter().sum();
-    println!("Part One) {}", sum);
+    let p1sum: i64 = part_one.iter().sum();
+    println!("Part One) {}", p1sum);
 
-    let rev_lines: Vec<Vec<i64>> = contents
-        .lines()
-        .map(|l| {
-            l.split(char::is_whitespace)
-                .rev()
-                .map(|n| n.parse::<i64>().unwrap())
-                .collect()
-        })
-        .collect();
+    lines
+        .iter_mut()
+        .for_each(|slice: &mut Vec<i64>| slice.reverse());
 
-    let part_two: Vec<i64> = rev_lines.iter().map(|l| find_next_num(&l[..])).collect();
+    let part_two: Vec<i64> = lines.iter().map(|l| find_next_num(&l[..])).collect();
     let p2sum: i64 = part_two.iter().sum();
     println!("Part Two) {}", p2sum);
 }
