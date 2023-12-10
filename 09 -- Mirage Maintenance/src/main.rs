@@ -1,7 +1,9 @@
 use std::env;
 use std::fs;
+use std::time::Instant;
 
 fn main() {
+    let start = Instant::now();
     let file_path = env::args().nth(1).unwrap_or("test_input".to_string());
     let binding = fs::read_to_string(file_path).expect("Should have been able to read the file");
     let contents = binding.trim_end();
@@ -26,6 +28,8 @@ fn main() {
     let part_two: Vec<i64> = lines.iter().map(|l| find_next_num(&l[..])).collect();
     let p2sum: i64 = part_two.iter().sum();
     println!("Part Two) {}", p2sum);
+
+    println!("---\ntime: {:?}", Instant::now().duration_since(start));
 }
 
 fn find_next_num(nums: &[i64]) -> i64 {
