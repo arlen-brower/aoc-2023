@@ -1,44 +1,50 @@
 // use std::collections::HashMap;
 // use std::collections::HashSet;
-// use std::env;
-// use std::fs;
-// use std::time::Instant;
+use std::env;
+use std::fs;
+use std::time::Instant;
 
 fn main() {
-    // let start = Instant::now();
-    // let file_path = env::args().nth(1).unwrap_or("test_input".to_string());
-    // let binding = fs::read_to_string(file_path).expect("Should have been able to read the file");
-    // let contents = binding.trim_end();
+    let start = Instant::now();
+    let file_path = env::args().nth(1).unwrap_or("test_input".to_string());
+    let binding = fs::read_to_string(file_path).expect("Should have been able to read the file");
+    let contents = binding.trim_end();
 
-    println!("{}", solve_block("???.###", &[1, 1, 3]));
-    println!("{}", solve_block(".??..??...?##", &[1, 1, 3]));
-    println!("{}", solve_block("?#?#?#?#?#?#?#?", &[1, 3, 1, 6]));
-    println!("{}", solve_block("????.#...#...", &[4, 1, 1]));
-    println!("{}", solve_block("????.######..#####.", &[1, 6, 5]));
-    println!("{}", solve_block("?###????????", &[3, 2, 1]));
+    let mut sum = 0;
 
-    // println!("{}", solve_block("???????", &[2, 1]));
-    // println!("{}", solve_block(".??..??...", &v[..]));
-    // println!("{}", solve_block(".?#?.?..", &v[..]));
-    // println!("{}", find_combinations(s, &v[..]));
+    for line in contents.lines() {
+        let (block, num_str) = line.split_once(' ').unwrap();
+        let mut nums: Vec<usize> = Vec::new();
+        for n in num_str.split(',') {
+            nums.push(n.parse().unwrap());
+        }
+
+        println!("{}  ||  {block}  {:?}", solve_block(block, &nums[..]), nums);
+        sum += solve_block(block.trim(), &nums[..]);
+    }
+    println!("{sum} arrangements");
+
+    // println!("{}", solve_block("???.###", &[1, 1, 3]));
+    // println!("{}", solve_block(".??..??...???", &[1, 1, 3]));
+    // println!("{}", solve_block("?#?#?#?#?#?#?#?", &[1, 3, 1, 6]));
+    // println!("{}", solve_block("????.#...#...", &[4, 1, 1]));
+    // println!("{}", solve_block("????.######..#####.", &[1, 6, 5]));
+    // println!("{}", solve_block("?###????????", &[3, 2, 1]));
+    // println!("{}", solve_block(".?.????#??#", &[1, 1, 2]));
+    println!("{}", solve_block(".?.????????", &[1, 1, 2]));
 }
 
 fn solve_block(block: &str, nums: &[usize]) -> usize {
+    if nums.len() > 0 && block.len() < nums[0] {
+        // println!("{}", nums[0]);
+        return 0;
+    }
     if nums.len() == 0 {
         return 1;
     }
 
-    if block.len() < nums[0] {
-        // println!("{}", nums[0]);
-        return 0;
-    }
+    // println!("{block}");
 
-    let offset: usize;
-    if nums.len() == 1 {
-        offset = 0;
-    } else {
-        offset = 1;
-    }
     let window: usize = nums[0];
     let len = block.len();
     let mut sum = 0;
@@ -46,27 +52,56 @@ fn solve_block(block: &str, nums: &[usize]) -> usize {
     let mut j = 0;
 
     let mut cur_win = &block[j..j + window];
-    if len == window && !cur_win.contains('.') {
-        return 1;
+
+    let offset: usize;
+    if nums.len() == 1 {
+        offset = 0;
+    } else {
+        offset = 1;
     }
 
-    while j < len - window - offset {
-        cur_win = &block[j..j + window];
-        while j < len - window && cur_win.contains('.') {
-            cur_win = &block[j..j + window];
-            j += 1;
-        }
-        if cur_win.contains('#') {
-            while j < len - window && cur_win.chars().last().unwrap() == '#' {
-                cur_win = &block[j..j + window];
+    while j < len {
+        match block.get(j..j + window) {
+            Some(cur) => cur_win = cur,
+            None => {
                 j += 1;
+                continue;
             }
         }
-        if j > len - window - offset {
-            j = len - window - offset;
+
+        cur_win = &block[j..j + window];
+        if cur_win.contains('.') {
+            j += 1;
+            continue;
         }
 
-        sum += solve_block(&block[j + window + offset..], &nums[1..]);
+        match block.chars().nth(j + window) {
+            Some('#') => {
+                j += 1;
+                continue;
+            }
+            Some(_) => (),
+            None => (),
+        };
+        if cur_win.contains('#') {
+            let mut need_rewind = false;
+            while j < len - window && cur_win.chars().last().unwrap() == '#' {
+                j += 1;
+                cur_win = &block[j..j + window];
+                need_rewind = true;
+            }
+            if need_rewind {
+                j -= 1;
+            }
+        }
+
+        if nums.len() == 1 && cur_win.len() == window && !cur_win.contains('.') {
+            return 1;
+        }
+        match block.get(j + window + offset..) {
+            Some(sub) => sum += solve_block(sub, &nums[1..]),
+            None => (),
+        }
         j += 1;
     }
     sum
