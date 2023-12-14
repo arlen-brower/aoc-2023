@@ -1,11 +1,11 @@
 use std::env;
 use std::fs;
-// use std::time::Instant;
+use std::time::Instant;
 
 fn main() {
-    // let start = Instant::now();
     let file_path = env::args().nth(1).unwrap_or("test_input".to_string());
     let binding = fs::read_to_string(file_path).expect("Should have been able to read the file");
+    let start = Instant::now();
     let contents = binding.trim_end();
 
     let mut sum_rows = 0;
@@ -15,10 +15,10 @@ fn main() {
         let (r, c) = solve_grid(lines);
         sum_rows += r;
         sum_cols += c;
-        println!("{r} {c}");
     }
     let p1 = sum_cols + sum_rows * 100;
     println!("Part 2) {p1}");
+    println!("---\ntime: {:?}", Instant::now().duration_since(start));
 }
 
 fn solve_grid(lines: Vec<&str>) -> (usize, usize) {
