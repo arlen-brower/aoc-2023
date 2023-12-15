@@ -38,8 +38,8 @@ fn main() {
         big_nums.extend_from_slice(&nums[..]);
         big_nums.extend_from_slice(&nums[..]);
         big_nums.extend_from_slice(&nums[..]);
-        let mut cache: HashMap<(&str, &[usize]), usize> = HashMap::new();
 
+        let mut cache: HashMap<(&str, &[usize]), usize> = HashMap::new();
         let p1count = solve(block.trim(), &nums[..], &mut cache);
         let p2count = solve(big_block.trim(), &big_nums[..], &mut cache);
         p1sum += p1count;
