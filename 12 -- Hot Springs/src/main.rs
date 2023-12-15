@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-// use std::collections::HashSet;
 use std::env;
 use std::fs;
 use std::time::Instant;
@@ -10,7 +9,8 @@ fn main() {
     let binding = fs::read_to_string(file_path).expect("Should have been able to read the file");
     let contents = binding.trim_end();
 
-    let mut sum = 0;
+    let mut p1sum = 0;
+    let mut p2sum = 0;
 
     for line in contents.lines() {
         let (block, num_str) = line.split_once(' ').unwrap();
@@ -38,27 +38,17 @@ fn main() {
         big_nums.extend_from_slice(&nums[..]);
         big_nums.extend_from_slice(&nums[..]);
         big_nums.extend_from_slice(&nums[..]);
-        // println!("{:?}", big_nums);
-        // println!("{}  ||  {block}  {:?}", solve(block, &nums[..]), nums);
-
         let mut cache: HashMap<(&str, &[usize]), usize> = HashMap::new();
 
-        let count = solve(big_block.trim(), &big_nums[..], &mut cache);
-        println!("{count}");
-        sum += count;
+        let p1count = solve(block.trim(), &nums[..], &mut cache);
+        let p2count = solve(big_block.trim(), &big_nums[..], &mut cache);
+        p1sum += p1count;
+        p2sum += p2count;
     }
-    println!("{sum} arrangements");
+    println!("Part 1) {p1sum} arrangements");
+    println!("Part 2) {p2sum} arrangements");
 
     println!("---\ntime: {:?}", Instant::now().duration_since(start));
-    // println!("{}", solve_block("???.###", &[1, 1, 3]));
-    // println!("{}", solve_block(".??..??...???", &[1, 1, 3]));
-    // println!("{}", solve_block("?#?#?#?#?#?#?#?", &[1, 3, 1, 6]));
-    // println!("{}", solve_block("????.#...#...", &[4, 1, 1]));
-    // println!("{}", solve_block("????.######..#####.", &[1, 6, 5]));
-    // println!("{}", solve_block("?###????????", &[3, 2, 1]));
-    // println!("{}", solve_block(".?.????#??#", &[1, 1, 2]));
-    // println!("{}", solve_block(".?.????????", &[1, 1, 2]));
-    // println!("{}", solve_block("???????????", &[1, 1, 2]));
 }
 
 fn octothorpe<'a>(
@@ -132,123 +122,6 @@ fn solve<'a>(
         _ => panic!(),
     };
 
-    // println!("{:?} {:?} {}", block, nums, out);
     cache.insert((block, nums), out);
     out
 }
-
-// Old code, adhoc weird logic...
-//
-// fn solve_block(block: &str, nums: &[usize]) -> usize {
-//     if nums.len() > 0 && block.len() < nums[0] {
-//         // println!("{}", nums[0]);
-//         return 0;
-//     }
-//     if nums.len() == 0 && block.contains('#') {
-//         return 0;
-//     }
-//     if nums.len() == 0 {
-//         return 1;
-//     }
-//
-//     // println!("{block}");
-//
-//     let window: usize = nums[0];
-//     let len = block.len();
-//     let mut sum = 0;
-//
-//     let mut j = 0;
-//
-//     let mut cur_win = &block[j..j + window];
-//
-//     let offset: usize;
-//     if nums.len() == 1 {
-//         offset = 0;
-//     } else {
-//         offset = 1;
-//     }
-//
-//     while j < len {
-//         match block.get(j..j + window) {
-//             Some(cur) => cur_win = cur,
-//             None => {
-//                 j += 1;
-//                 continue;
-//             }
-//         }
-//
-//         if cur_win.contains('.') {
-//             j += 1;
-//             continue;
-//         }
-//
-//         // match block.chars().nth(j + window) {
-//         //     Some('#') => {
-//         //         j += 1;
-//         //         continue;
-//         //     }
-//         //     Some(_) => (),
-//         //     None => (),
-//         // };
-//         if cur_win.contains('#') {
-//             let mut need_rewind = false;
-//             let start = j;
-//             while j < len - window && cur_win.chars().last().unwrap() == '#' {
-//                 j += 1;
-//                 cur_win = &block[start..j + window];
-//                 need_rewind = true;
-//             }
-//             if need_rewind {
-//                 // j -= 1;
-//             }
-//             let hash_count = cur_win
-//                 .chars()
-//                 .fold(0, |acc, ch| if ch == '#' { acc + 1 } else { acc });
-//
-//             let win_len = cur_win.len();
-//         }
-//
-//         match block.get(j + window + offset..) {
-//             Some(sub) => sum += solve_block(sub, &nums[1..]),
-//             None => (),
-//         }
-//         j += 1;
-//     }
-//     sum
-// }
-
-// fn find_combinations(line: &str, mut nums: &mut [usize]) -> usize {
-//     if nums.len() == 0 {
-//         return 0;
-//     }
-//
-//     let window: usize = nums[0];
-//     let mut start: usize = 0;
-//     let mut end: usize = window;
-//
-//     let blocks = line.split('.').collect::<Vec<&str>>();
-//
-//     let mut sum = 0;
-//     for i in 0..blocks.len() {
-//         let cur_block = blocks.get(i).unwrap();
-//         let cur_len = cur_block.len();
-//         if cur_len == 0 || cur_len < window {
-//             continue;
-//         }
-//         if cur_block.contains('#') {
-//             // Must match
-//             let hash_count = cur_block
-//                 .chars()
-//                 .fold(0, |acc, ch| if ch == '#' { acc + 1 } else { acc });
-//
-//             if hash_count == window {
-//                 nums = &mut nums[1..];
-//                 continue;
-//             }
-//         } else {
-//             sum += solve_block(cur_block, nums);
-//         }
-//     }
-//
-//     sum
-// }
