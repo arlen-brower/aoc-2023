@@ -10,16 +10,22 @@ const COLS: usize = 141;
 const MIN_LEN: u32 = 3;
 const MAX_LEN: u32 = 10;
 
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Copy, Clone, Eq, PartialEq)]
 struct SearchPath {
-    y: usize,
-    x: usize,
+    r: usize,
+    c: usize,
     dir: char,
     count: u32,
     dist: u32,
-    path: Vec<(usize, usize)>,
 }
 
+#[derive(Eq, Hash, PartialEq)]
+struct State {
+    r: usize,
+    c: usize,
+    dir: char,
+    count: u32,
+}
 impl Ord for SearchPath {
     fn cmp(&self, other: &Self) -> Ordering {
         other.dist.cmp(&self.dist)
@@ -57,72 +63,82 @@ fn main() {
 fn print_grid(grid: &[Vec<u32>]) {
     for row in grid.iter().take(ROWS) {
         for c in row.iter().take(COLS) {
-            print!(" {}", c);
+            print!("{}", c);
         }
         println!()
     }
 }
 
 fn bfs(grid: &[Vec<u32>], start: (usize, usize)) -> u32 {
-    let mut visited: HashMap<(usize, usize, char, u32), u32> = HashMap::new();
+    let mut visited: HashMap<State, u32> = HashMap::with_capacity(917504);
 
-    // let mut q: VecDeque<(usize, usize, char, u32, u32, Vec<(usize, usize)>)> = VecDeque::new();
-    // let mut q: VecDeque<SearchPath> = VecDeque::new();
-    let mut q: BinaryHeap<SearchPath> = BinaryHeap::new();
+    let mut q: BinaryHeap<SearchPath> = BinaryHeap::with_capacity(131072);
 
-    visited.insert((start.0, start.1, 's', 0), 0);
+    visited.insert(
+        State {
+            r: start.0,
+            c: start.1,
+            dir: 's',
+            count: 0,
+        },
+        0,
+    );
     q.push(SearchPath {
-        y: start.0,
-        x: start.1,
+        r: start.0,
+        c: start.1,
         dir: 's',
         count: 0,
         dist: 0,
-        path: Vec::new(),
     });
 
-    let mut v_dists: Vec<u32> = Vec::new();
+    let mut v_dists: BinaryHeap<u32> = BinaryHeap::new();
 
-    while !q.is_empty() {
-        // let (r, c, dir, count, cur_dist, path) = q.pop_front().unwrap();
-        let cur_path = q.pop().unwrap();
-
-        let r = cur_path.y;
-        let c = cur_path.x;
-        let dir = cur_path.dir;
-        let count = cur_path.count;
-        let cur_dist = cur_path.dist;
-        let path = cur_path.path;
-
+    while let Some(SearchPath {
+        r,
+        c,
+        dir,
+        count,
+        dist,
+    }) = q.pop()
+    {
         let n = get_neighbours(r, c, dir, count);
 
-        let mut t_path = path.clone();
-        t_path.push((r, c));
-
         if (r, c) == (ROWS - 1, COLS - 1) && count >= MIN_LEN {
-            v_dists.push(cur_dist);
+            v_dists.push(dist);
             continue;
         }
 
         for (nr, nc, nd, ncnt) in n {
-            let new_dist = cur_dist + grid[nr][nc];
-            if let Some(dist) = visited.get(&(nr, nc, nd, ncnt)) {
+            let new_dist = dist + grid[nr][nc];
+            if let Some(dist) = visited.get(&State {
+                r: nr,
+                c: nc,
+                dir: nd,
+                count: ncnt,
+            }) {
                 if *dist < new_dist {
                     continue;
                 }
             }
 
-            visited.insert((nr, nc, nd, ncnt), new_dist);
+            visited.insert(
+                State {
+                    r: nr,
+                    c: nc,
+                    dir: nd,
+                    count: ncnt,
+                },
+                new_dist,
+            );
             q.push(SearchPath {
-                y: nr,
-                x: nc,
+                r: nr,
+                c: nc,
                 dir: nd,
                 count: ncnt,
-                dist: cur_dist + grid[nr][nc],
-                path: t_path.clone(),
+                dist: dist + grid[nr][nc],
             });
         }
     }
-
     *v_dists.iter().min().unwrap()
 }
 fn get_neighbours(r: usize, c: usize, dir: char, count: u32) -> Vec<(usize, usize, char, u32)> {
