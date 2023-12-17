@@ -6,8 +6,10 @@ use std::env;
 use std::fs;
 use std::time::Instant;
 
-const ROWS: usize = 141;
-const COLS: usize = 141;
+const ROWS: usize = 13;
+const COLS: usize = 13;
+const MIN_LEN: u32 = 3;
+const MAX_LEN: u32 = 10;
 
 fn main() {
     let file_path = env::args().nth(1).unwrap_or("test_input".to_string());
@@ -15,7 +17,7 @@ fn main() {
     let contents = binding.trim();
 
     let mut row = 0;
-    let mut col = 0;
+    let mut col;
     let start = Instant::now();
 
     let mut grid: Vec<Vec<u32>> = vec![vec![0; COLS]; ROWS];
@@ -29,12 +31,14 @@ fn main() {
         row += 1;
     }
 
+    print_grid(&grid);
+
     println!("---");
     println!("{}", bfs(&grid, (0, 0)));
     println!("---\ntime: {:?}", Instant::now().duration_since(start));
 }
 
-fn print_grid(grid: &Vec<Vec<u32>>, rows: usize, cols: usize) -> () {
+fn print_grid(grid: &Vec<Vec<u32>>) -> () {
     for r in 0..ROWS {
         for c in 0..COLS {
             print!(" {}", grid[r][c]);
@@ -55,54 +59,14 @@ fn bfs(grid: &Vec<Vec<u32>>, start: (usize, usize)) -> u32 {
 
     while !q.is_empty() {
         let (r, c, dir, count, cur_dist, path) = q.pop_front().unwrap();
-        let mut n: Vec<(usize, usize, char, u32)> = Vec::new();
+        let n = get_neighbours(r, c, dir, count);
 
         let mut t_path = path.clone();
         t_path.push((r, c));
 
-        if (r, c) == (ROWS - 1, COLS - 1) && count >= 3 {
+        if (r, c) == (ROWS - 1, COLS - 1) && count >= MIN_LEN {
             v_dists.push(cur_dist);
             continue;
-        }
-        // Up
-        if r + 1 < ROWS && (dir == '^' || count >= 3 || dir == 's') {
-            let mut new_c = 0;
-            if dir == '^' {
-                new_c = count + 1;
-            }
-            if new_c < 10 && dir != 'v' {
-                n.push((r + 1, c, '^', new_c));
-            }
-        }
-        // Down
-        if r >= 1 && (dir == 'v' || count >= 3 || dir == 's') {
-            let mut new_c = 0;
-            if dir == 'v' {
-                new_c = count + 1;
-            }
-            if new_c < 10 && dir != '^' {
-                n.push((r - 1, c, 'v', new_c));
-            }
-        }
-        // Right
-        if c + 1 < COLS && (dir == '>' || count >= 3 || dir == 's') {
-            let mut new_c = 0;
-            if dir == '>' {
-                new_c = count + 1;
-            }
-            if new_c < 10 && dir != '<' {
-                n.push((r, c + 1, '>', new_c));
-            }
-        }
-        // Left
-        if c >= 1 && (dir == '<' || count >= 3 || dir == 's') {
-            let mut new_c = 0;
-            if dir == '<' {
-                new_c = count + 1;
-            }
-            if new_c < 10 && dir != '>' {
-                n.push((r, c - 1, '<', new_c));
-            }
         }
 
         for (nr, nc, nd, ncnt) in n {
@@ -123,4 +87,48 @@ fn bfs(grid: &Vec<Vec<u32>>, start: (usize, usize)) -> u32 {
     }
 
     *v_dists.iter().min().unwrap()
+}
+fn get_neighbours(r: usize, c: usize, dir: char, count: u32) -> Vec<(usize, usize, char, u32)> {
+    let mut n: Vec<(usize, usize, char, u32)> = Vec::new();
+    // Up
+    if r + 1 < ROWS && (dir == '^' || count >= MIN_LEN || dir == 's') {
+        let mut new_c = 0;
+        if dir == '^' {
+            new_c = count + 1;
+        }
+        if new_c < MAX_LEN && dir != 'v' {
+            n.push((r + 1, c, '^', new_c));
+        }
+    }
+    // Down
+    if r >= 1 && (dir == 'v' || count >= MIN_LEN || dir == 's') {
+        let mut new_c = 0;
+        if dir == 'v' {
+            new_c = count + 1;
+        }
+        if new_c < MAX_LEN && dir != '^' {
+            n.push((r - 1, c, 'v', new_c));
+        }
+    }
+    // Right
+    if c + 1 < COLS && (dir == '>' || count >= MIN_LEN || dir == 's') {
+        let mut new_c = 0;
+        if dir == '>' {
+            new_c = count + 1;
+        }
+        if new_c < MAX_LEN && dir != '<' {
+            n.push((r, c + 1, '>', new_c));
+        }
+    }
+    // Left
+    if c >= 1 && (dir == '<' || count >= MIN_LEN || dir == 's') {
+        let mut new_c = 0;
+        if dir == '<' {
+            new_c = count + 1;
+        }
+        if new_c < MAX_LEN && dir != '>' {
+            n.push((r, c - 1, '<', new_c));
+        }
+    }
+    n
 }
