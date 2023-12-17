@@ -4,10 +4,10 @@ use std::fs;
 use std::time::Instant;
 
 fn main() {
-    let start = Instant::now();
     let file_path = env::args().nth(1).unwrap_or("test_input".to_string());
     let binding = fs::read_to_string(file_path).expect("Should have been able to read the file");
     let contents = binding.trim_end();
+    let start = Instant::now();
 
     let mut p1sum = 0;
     let mut p2sum = 0;
@@ -64,13 +64,7 @@ fn octothorpe<'a>(
 
     let this_num: String = (&block[..x]).to_string().replace("?", "#");
 
-    let mut test_string = String::new();
-
-    for _i in 0..next_num {
-        test_string.push('#');
-    }
-
-    if *this_num != test_string {
+    if this_num.contains(".") || this_num.len() != next_num {
         return 0;
     }
 
