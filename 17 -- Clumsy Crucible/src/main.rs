@@ -1,6 +1,4 @@
-use std::cmp;
 use std::collections::HashMap;
-use std::collections::HashSet;
 use std::collections::VecDeque;
 use std::env;
 use std::fs;
@@ -11,24 +9,28 @@ const COLS: usize = 13;
 const MIN_LEN: u32 = 3;
 const MAX_LEN: u32 = 10;
 
+struct SearchPath {
+    y: usize,
+    x: usize,
+    dir: char,
+    count: u32,
+    dist: u32,
+    path: Vec<(usize, usize)>,
+}
+
 fn main() {
     let file_path = env::args().nth(1).unwrap_or("test_input".to_string());
     let binding = fs::read_to_string(file_path).expect("Should have been able to read the file");
     let contents = binding.trim();
 
-    let mut row = 0;
-    let mut col;
     let start = Instant::now();
 
     let mut grid: Vec<Vec<u32>> = vec![vec![0; COLS]; ROWS];
-    for line in contents.lines() {
-        col = 0;
-        for ch in line.chars() {
+    for (row, line) in contents.lines().enumerate() {
+        for (col, ch) in line.chars().enumerate() {
             let int_ch = ch.to_digit(10).unwrap();
             grid[row][col] = int_ch;
-            col += 1;
         }
-        row += 1;
     }
 
     print_grid(&grid);
@@ -38,27 +40,44 @@ fn main() {
     println!("---\ntime: {:?}", Instant::now().duration_since(start));
 }
 
-fn print_grid(grid: &Vec<Vec<u32>>) -> () {
-    for r in 0..ROWS {
-        for c in 0..COLS {
-            print!(" {}", grid[r][c]);
+fn print_grid(grid: &[Vec<u32>]) {
+    for row in grid.iter().take(ROWS) {
+        for c in row.iter().take(COLS) {
+            print!(" {}", c);
         }
         println!()
     }
 }
 
-fn bfs(grid: &Vec<Vec<u32>>, start: (usize, usize)) -> u32 {
+fn bfs(grid: &[Vec<u32>], start: (usize, usize)) -> u32 {
     let mut visited: HashMap<(usize, usize, char, u32), u32> = HashMap::new();
 
-    let mut q: VecDeque<(usize, usize, char, u32, u32, Vec<(usize, usize)>)> = VecDeque::new();
+    // let mut q: VecDeque<(usize, usize, char, u32, u32, Vec<(usize, usize)>)> = VecDeque::new();
+    let mut q: VecDeque<SearchPath> = VecDeque::new();
 
     visited.insert((start.0, start.1, 's', 0), 0);
-    q.push_back((start.0, start.1, 's', 0, 0, Vec::new()));
+    q.push_back(SearchPath {
+        y: start.0,
+        x: start.1,
+        dir: 's',
+        count: 0,
+        dist: 0,
+        path: Vec::new(),
+    });
 
     let mut v_dists: Vec<u32> = Vec::new();
 
     while !q.is_empty() {
-        let (r, c, dir, count, cur_dist, path) = q.pop_front().unwrap();
+        // let (r, c, dir, count, cur_dist, path) = q.pop_front().unwrap();
+        let cur_path = q.pop_front().unwrap();
+
+        let r = cur_path.y;
+        let c = cur_path.x;
+        let dir = cur_path.dir;
+        let count = cur_path.count;
+        let cur_dist = cur_path.dist;
+        let path = cur_path.path;
+
         let n = get_neighbours(r, c, dir, count);
 
         let mut t_path = path.clone();
@@ -71,18 +90,21 @@ fn bfs(grid: &Vec<Vec<u32>>, start: (usize, usize)) -> u32 {
 
         for (nr, nc, nd, ncnt) in n {
             let new_dist = cur_dist + grid[nr][nc];
-            match visited.get(&(nr, nc, nd, ncnt)) {
-                Some(dist) => {
-                    if *dist > new_dist {
-                        visited.insert((nr, nc, nd, ncnt), new_dist);
-                        q.push_back((nr, nc, nd, ncnt, cur_dist + grid[nr][nc], t_path.clone()));
-                    }
-                }
-                None => {
-                    visited.insert((nr, nc, nd, ncnt), new_dist);
-                    q.push_back((nr, nc, nd, ncnt, cur_dist + grid[nr][nc], t_path.clone()));
+            if let Some(dist) = visited.get(&(nr, nc, nd, ncnt)) {
+                if *dist < new_dist {
+                    continue;
                 }
             }
+
+            visited.insert((nr, nc, nd, ncnt), new_dist);
+            q.push_back(SearchPath {
+                y: nr,
+                x: nc,
+                dir: nd,
+                count: ncnt,
+                dist: cur_dist + grid[nr][nc],
+                path: t_path.clone(),
+            });
         }
     }
 
