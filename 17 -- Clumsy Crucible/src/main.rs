@@ -40,7 +40,7 @@ fn main() {
         println!()
     }
 
-    // print_grid(&grid, 13, 13);
+    print_grid(&grid, ROWS, COLS);
 
     println!("---");
     println!("{}", bfs(&grid, (0, 0)));
@@ -148,28 +148,44 @@ fn search(
 fn bfs(grid: &Vec<Vec<u32>>, start: (usize, usize)) -> u32 {
     // let mut distances: Vec<Vec<u32>> = vec![vec![0; ROWS]; COLS];
     // let mut visited: Vec<Vec<bool>> = vec![vec![false; 13]; 13];
-    let mut distances: HashMap<(usize, usize, char, u32), u32> = HashMap::new();
-    let mut visited: HashSet<(usize, usize, char, u32)> = HashSet::new();
+    // let mut distances: HashMap<(usize, usize, char, u32), u32> = HashMap::new();
+    // let mut visited: HashSet<(usize, usize, char, u32)> = HashSet::new();
+    let mut visited: HashMap<(usize, usize, char, u32), u32> = HashMap::new();
 
-    let mut q: VecDeque<(usize, usize, char, u32)> = VecDeque::new();
+    let mut q: VecDeque<(usize, usize, char, u32, u32, Vec<(usize, usize)>)> = VecDeque::new();
 
     // distances[start.0][start.1] = 0;
     // visited[start.0][start.1] = true;
-    distances.insert((start.0, start.1, 's', 0), 0);
-    visited.insert((start.0, start.1, 's', 0));
-    q.push_back((start.0, start.1, 's', 0));
+    // distances.insert((start.0, start.1, 's', 0), 0);
+    visited.insert((start.0, start.1, 's', 0), 0);
+    q.push_back((start.0, start.1, 's', 0, 0, Vec::new()));
+
+    let mut v_dists: Vec<u32> = Vec::new();
 
     while !q.is_empty() {
-        let (r, c, dir, count) = q.pop_front().unwrap();
+        let (r, c, dir, count, cur_dist, path) = q.pop_front().unwrap();
         let mut n: Vec<(usize, usize, char, u32)> = Vec::new();
 
+        let mut t_path = path.clone();
+        t_path.push((r, c));
+
+        // if t_path.contains(&(0, 1)) {
+        //     println!("{:?}", t_path);
+        // }
+
+        if (r, c) == (ROWS - 1, COLS - 1) {
+            v_dists.push(cur_dist);
+            println!("{cur_dist}");
+            // println!("{:?}", t_path);
+            continue;
+        }
         // Up
         if r + 1 < ROWS {
             let mut new_c = 0;
             if dir == '^' {
                 new_c = count + 1;
             }
-            if new_c <= 3 && dir != 'v' {
+            if new_c < 3 && dir != 'v' {
                 n.push((r + 1, c, '^', new_c));
             }
         }
@@ -179,7 +195,7 @@ fn bfs(grid: &Vec<Vec<u32>>, start: (usize, usize)) -> u32 {
             if dir == 'v' {
                 new_c = count + 1;
             }
-            if new_c <= 3 && dir != '^' {
+            if new_c < 3 && dir != '^' {
                 n.push((r - 1, c, 'v', new_c));
             }
         }
@@ -189,7 +205,7 @@ fn bfs(grid: &Vec<Vec<u32>>, start: (usize, usize)) -> u32 {
             if dir == '>' {
                 new_c = count + 1;
             }
-            if new_c <= 3 && dir != '<' {
+            if new_c < 3 && dir != '<' {
                 n.push((r, c + 1, '>', new_c));
             }
         }
@@ -199,38 +215,53 @@ fn bfs(grid: &Vec<Vec<u32>>, start: (usize, usize)) -> u32 {
             if dir == '<' {
                 new_c = count + 1;
             }
-            if new_c <= 3 && dir != '>' {
+            if new_c < 3 && dir != '>' {
                 n.push((r, c - 1, '<', new_c));
             }
         }
 
         for (nr, nc, nd, ncnt) in n {
-            if !visited.contains(&(nr, nc, nd, ncnt)) {
-                visited.insert((nr, nc, nd, ncnt));
-                // if !visited[nr][nc] {
-                //     visited[nr][nc] = true;
-                // distances[nr][nc] = distances[r][c] + grid[nr][nc];
-                distances.insert(
-                    (nr, nc, nd, ncnt),
-                    grid[nr][nc] + distances.get(&(r, c, dir, count)).unwrap(),
-                );
-                q.push_back((nr, nc, nd, ncnt));
+            let new_dist = cur_dist + grid[nr][nc];
+            match visited.get(&(nr, nc, nd, ncnt)) {
+                Some(dist) => {
+                    if *dist > new_dist {
+                        visited.insert((nr, nc, nd, ncnt), new_dist);
+                        q.push_back((nr, nc, nd, ncnt, cur_dist + grid[nr][nc], t_path.clone()));
+                    }
+                }
+                None => {
+                    visited.insert((nr, nc, nd, ncnt), new_dist);
+                    q.push_back((nr, nc, nd, ncnt, cur_dist + grid[nr][nc], t_path.clone()));
+                }
             }
+            // if !visited.contains(&(nr, nc, nd, ncnt)) {
+            //     visited.insert((nr, nc, nd, ncnt));
+            //     // if !visited[nr][nc] {
+            //     //     visited[nr][nc] = true;
+            //     // distances[nr][nc] = distances[r][c] + grid[nr][nc];
+            //     // distances.insert(
+            //     //     (nr, nc, nd, ncnt),
+            //     //     grid[nr][nc] + distances.get(&(r, c, dir, count)).unwrap(),
+            //     // );
+            //     q.push_back((nr, nc, nd, ncnt, cur_dist + grid[nr][nc], t_path.clone()));
+            // }
         }
     }
+
+    *v_dists.iter().min().unwrap()
     // print_grid(&distances, 13, 13);
     // distances[ROWS - 1][COLS - 1]
 
-    for (r, c, d, cnt) in distances.keys() {
-        if (*r, *c) == (ROWS - 1, COLS - 1) {
-            println!(
-                "{} {} : {}",
-                r,
-                c,
-                distances.get(&(*r, *c, *d, *cnt)).unwrap()
-            );
-        }
-    }
-
-    *distances.get(&(ROWS - 1, COLS - 1, '>', 0)).unwrap()
+    // for (r, c, d, cnt) in distances.keys() {
+    //     if (*r, *c) == (ROWS - 1, COLS - 1) {
+    //         println!(
+    //             "{} {} : {}",
+    //             r,
+    //             c,
+    //             distances.get(&(*r, *c, *d, *cnt)).unwrap()
+    //         );
+    //     }
+    // }
+    //
+    // *distances.get(&(ROWS - 1, COLS - 1, '>', 0)).unwrap()
 }
