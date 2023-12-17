@@ -17,7 +17,7 @@ fn main() {
     let mut row = 0;
     let mut col = 0;
 
-    let mut grid: Vec<Vec<u32>> = vec![vec![0; 13]; 13];
+    let mut grid: Vec<Vec<u32>> = vec![vec![0; ROWS]; COLS];
     for line in contents.lines() {
         col = 0;
         for ch in line.chars() {
@@ -40,7 +40,7 @@ fn main() {
         println!()
     }
 
-    print_grid(&grid, 13, 13);
+    // print_grid(&grid, 13, 13);
 
     println!("---");
     println!("{}", bfs(&grid, (0, 0)));
@@ -146,14 +146,16 @@ fn search(
 }
 
 fn bfs(grid: &Vec<Vec<u32>>, start: (usize, usize)) -> u32 {
-    let mut distances: Vec<Vec<u32>> = vec![vec![0; 13]; 13];
+    // let mut distances: Vec<Vec<u32>> = vec![vec![0; ROWS]; COLS];
     // let mut visited: Vec<Vec<bool>> = vec![vec![false; 13]; 13];
+    let mut distances: HashMap<(usize, usize, char, u32), u32> = HashMap::new();
     let mut visited: HashSet<(usize, usize, char, u32)> = HashSet::new();
 
     let mut q: VecDeque<(usize, usize, char, u32)> = VecDeque::new();
 
-    distances[start.0][start.1] = 0;
+    // distances[start.0][start.1] = 0;
     // visited[start.0][start.1] = true;
+    distances.insert((start.0, start.1, 's', 0), 0);
     visited.insert((start.0, start.1, 's', 0));
     q.push_back((start.0, start.1, 's', 0));
 
@@ -167,7 +169,7 @@ fn bfs(grid: &Vec<Vec<u32>>, start: (usize, usize)) -> u32 {
             if dir == '^' {
                 new_c = count + 1;
             }
-            if new_c < 3 && dir != 'v' {
+            if new_c <= 3 && dir != 'v' {
                 n.push((r + 1, c, '^', new_c));
             }
         }
@@ -177,7 +179,7 @@ fn bfs(grid: &Vec<Vec<u32>>, start: (usize, usize)) -> u32 {
             if dir == 'v' {
                 new_c = count + 1;
             }
-            if new_c < 3 && dir != '^' {
+            if new_c <= 3 && dir != '^' {
                 n.push((r - 1, c, 'v', new_c));
             }
         }
@@ -187,7 +189,7 @@ fn bfs(grid: &Vec<Vec<u32>>, start: (usize, usize)) -> u32 {
             if dir == '>' {
                 new_c = count + 1;
             }
-            if new_c < 3 && dir != '<' {
+            if new_c <= 3 && dir != '<' {
                 n.push((r, c + 1, '>', new_c));
             }
         }
@@ -197,7 +199,7 @@ fn bfs(grid: &Vec<Vec<u32>>, start: (usize, usize)) -> u32 {
             if dir == '<' {
                 new_c = count + 1;
             }
-            if new_c < 3 && dir != '>' {
+            if new_c <= 3 && dir != '>' {
                 n.push((r, c - 1, '<', new_c));
             }
         }
@@ -207,11 +209,28 @@ fn bfs(grid: &Vec<Vec<u32>>, start: (usize, usize)) -> u32 {
                 visited.insert((nr, nc, nd, ncnt));
                 // if !visited[nr][nc] {
                 //     visited[nr][nc] = true;
-                distances[nr][nc] = distances[r][c] + grid[nr][nc];
+                // distances[nr][nc] = distances[r][c] + grid[nr][nc];
+                distances.insert(
+                    (nr, nc, nd, ncnt),
+                    grid[nr][nc] + distances.get(&(r, c, dir, count)).unwrap(),
+                );
                 q.push_back((nr, nc, nd, ncnt));
             }
         }
     }
-    print_grid(&distances, 13, 13);
-    distances[12][12]
+    // print_grid(&distances, 13, 13);
+    // distances[ROWS - 1][COLS - 1]
+
+    for (r, c, d, cnt) in distances.keys() {
+        if (*r, *c) == (ROWS - 1, COLS - 1) {
+            println!(
+                "{} {} : {}",
+                r,
+                c,
+                distances.get(&(*r, *c, *d, *cnt)).unwrap()
+            );
+        }
+    }
+
+    *distances.get(&(ROWS - 1, COLS - 1, '>', 0)).unwrap()
 }
