@@ -1,14 +1,16 @@
+use std::cmp::Ordering;
+use std::collections::BinaryHeap;
 use std::collections::HashMap;
-use std::collections::VecDeque;
 use std::env;
 use std::fs;
 use std::time::Instant;
 
-const ROWS: usize = 13;
-const COLS: usize = 13;
+const ROWS: usize = 141;
+const COLS: usize = 141;
 const MIN_LEN: u32 = 3;
 const MAX_LEN: u32 = 10;
 
+#[derive(Clone, Eq, PartialEq)]
 struct SearchPath {
     y: usize,
     x: usize,
@@ -16,6 +18,18 @@ struct SearchPath {
     count: u32,
     dist: u32,
     path: Vec<(usize, usize)>,
+}
+
+impl Ord for SearchPath {
+    fn cmp(&self, other: &Self) -> Ordering {
+        other.dist.cmp(&self.dist)
+    }
+}
+
+impl PartialOrd for SearchPath {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
 }
 
 fn main() {
@@ -53,10 +67,11 @@ fn bfs(grid: &[Vec<u32>], start: (usize, usize)) -> u32 {
     let mut visited: HashMap<(usize, usize, char, u32), u32> = HashMap::new();
 
     // let mut q: VecDeque<(usize, usize, char, u32, u32, Vec<(usize, usize)>)> = VecDeque::new();
-    let mut q: VecDeque<SearchPath> = VecDeque::new();
+    // let mut q: VecDeque<SearchPath> = VecDeque::new();
+    let mut q: BinaryHeap<SearchPath> = BinaryHeap::new();
 
     visited.insert((start.0, start.1, 's', 0), 0);
-    q.push_back(SearchPath {
+    q.push(SearchPath {
         y: start.0,
         x: start.1,
         dir: 's',
@@ -69,7 +84,7 @@ fn bfs(grid: &[Vec<u32>], start: (usize, usize)) -> u32 {
 
     while !q.is_empty() {
         // let (r, c, dir, count, cur_dist, path) = q.pop_front().unwrap();
-        let cur_path = q.pop_front().unwrap();
+        let cur_path = q.pop().unwrap();
 
         let r = cur_path.y;
         let c = cur_path.x;
@@ -97,7 +112,7 @@ fn bfs(grid: &[Vec<u32>], start: (usize, usize)) -> u32 {
             }
 
             visited.insert((nr, nc, nd, ncnt), new_dist);
-            q.push_back(SearchPath {
+            q.push(SearchPath {
                 y: nr,
                 x: nc,
                 dir: nd,
