@@ -70,9 +70,9 @@ fn print_grid(grid: &[Vec<u32>]) {
 }
 
 fn bfs(grid: &[Vec<u32>], start: (usize, usize)) -> u32 {
-    let mut visited: HashMap<State, u32> = HashMap::with_capacity(917504);
+    let mut visited: HashMap<State, u32> = HashMap::new();
 
-    let mut q: BinaryHeap<SearchPath> = BinaryHeap::with_capacity(131072);
+    let mut q: BinaryHeap<SearchPath> = BinaryHeap::new();
 
     visited.insert(
         State {
@@ -91,7 +91,7 @@ fn bfs(grid: &[Vec<u32>], start: (usize, usize)) -> u32 {
         dist: 0,
     });
 
-    let mut v_dists: BinaryHeap<u32> = BinaryHeap::new();
+    let mut min_dist = u32::MAX;
 
     while let Some(SearchPath {
         r,
@@ -104,8 +104,8 @@ fn bfs(grid: &[Vec<u32>], start: (usize, usize)) -> u32 {
         let n = get_neighbours(r, c, dir, count);
 
         if (r, c) == (ROWS - 1, COLS - 1) && count >= MIN_LEN {
-            v_dists.push(dist);
-            continue;
+            min_dist = dist;
+            break;
         }
 
         for (nr, nc, nd, ncnt) in n {
@@ -139,7 +139,7 @@ fn bfs(grid: &[Vec<u32>], start: (usize, usize)) -> u32 {
             });
         }
     }
-    *v_dists.iter().min().unwrap()
+    min_dist
 }
 fn get_neighbours(r: usize, c: usize, dir: char, count: u32) -> Vec<(usize, usize, char, u32)> {
     let mut n: Vec<(usize, usize, char, u32)> = Vec::new();
