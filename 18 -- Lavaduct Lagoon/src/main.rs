@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::time::Instant;
@@ -13,55 +14,27 @@ fn main() {
     let binding = fs::read_to_string(file_path).expect("Should have been able to read the file");
     let contents = binding.trim();
 
+    let dir_map: HashMap<&str, (i64, i64)> =
+        HashMap::from([("0", (0, 1)), ("1", (1, 0)), ("2", (0, -1)), ("3", (-1, 0))]);
+
+    let start = Instant::now();
     let mut poly_vec: Vec<(Point, Point)> = Vec::new();
     let mut pos = Point { x: 0, y: 0 };
 
     let mut border = 0;
     for line in contents.lines() {
-        let (p1dir, rest) = line.split_once(' ').unwrap();
-        let (dist_str, code) = rest.split_once(' ').unwrap();
-        let p1dist = dist_str.parse::<u32>().unwrap();
+        let code = &line[line.len() - 9..line.len()];
+        let dist = i64::from_str_radix(&code[2..code.len() - 2], 16).unwrap();
+        let dir = &code[code.len() - 2..code.len() - 1];
 
-        let code = code
-            .trim_matches(|c| c == '(' || c == ')')
-            .trim_start_matches('#');
-        let (code, dir) = code.split_at(code.len() - 1);
-        let code = i64::from_str_radix(code, 16).unwrap();
-
-        let dist = code as i64;
-        border += dist;
         let old_pos = pos;
-        match dir {
-            "R" | "0" => {
-                pos = Point {
-                    x: pos.x,
-                    y: pos.y + dist,
-                };
-                poly_vec.push((old_pos, pos));
-            }
-            "L" | "2" => {
-                pos = Point {
-                    x: pos.x,
-                    y: pos.y - dist,
-                };
-                poly_vec.push((old_pos, pos));
-            }
-            "U" | "3" => {
-                pos = Point {
-                    x: pos.x - dist,
-                    y: pos.y,
-                };
-                poly_vec.push((old_pos, pos));
-            }
-            "D" | "1" => {
-                pos = Point {
-                    x: pos.x + dist,
-                    y: pos.y,
-                };
-                poly_vec.push((old_pos, pos));
-            }
-            _ => panic!(),
-        }
+        let (dx, dy) = dir_map.get(dir).unwrap();
+        pos = Point {
+            x: pos.x + dist * dx,
+            y: pos.y + dist * dy,
+        };
+        poly_vec.push((old_pos, pos));
+        border += dist;
     }
 
     let mut sum = 0;
@@ -73,4 +46,5 @@ fn main() {
     let area = (sum as f64 / 2.).abs();
     let interior = area - 0.5 * border as f64 + 1.;
     println!("{}", border as f64 + interior);
+    println!("---\ntime: {:?}", Instant::now().duration_since(start));
 }
