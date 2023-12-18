@@ -35,6 +35,18 @@ fn main() {
     println!("---\ntime: {:?}", Instant::now().duration_since(start));
 }
 
+fn parse_part1(line: &str) -> (&str, i64) {
+    (&line[..1], line[2..4].trim().parse::<i64>().unwrap())
+}
+
+fn parse_part2(line: &str) -> (&str, i64) {
+    let code = &line[line.len() - 9..line.len()];
+    let dist = i64::from_str_radix(&code[2..code.len() - 2], 16).unwrap();
+    let dir = &code[code.len() - 2..code.len() - 1];
+
+    (dir, dist)
+}
+
 fn solve<F>(contents: &str, dir_map: &HashMap<&str, (i64, i64)>, parser: F, part_str: &str)
 where
     F: Fn(&str) -> (&str, i64),
@@ -55,27 +67,15 @@ where
         border += dist;
     }
 
-    let mut sum = 0;
-
-    for (point_one, point_two) in poly_vec {
-        sum += point_one.x * point_two.y - point_two.x * point_one.y;
-    }
-
+    // Shoelace
+    let sum = poly_vec.iter().fold(0, |acc, (point_one, point_two)| {
+        acc + (point_one.x * point_two.y - point_two.x * point_one.y)
+    });
     let area = (sum as f64 / 2.).abs();
+
+    // Pick's
     let interior = area - 0.5 * border as f64 + 1.;
+
+    // Perimeter + Interior
     println!("{}: {}", part_str, border as f64 + interior);
-}
-
-fn parse_part1(line: &str) -> (&str, i64) {
-    (
-        &line[..1],
-        i64::from_str_radix(&line[2..4].trim(), 10).unwrap(),
-    )
-}
-fn parse_part2(line: &str) -> (&str, i64) {
-    let code = &line[line.len() - 9..line.len()];
-    let dist = i64::from_str_radix(&code[2..code.len() - 2], 16).unwrap();
-    let dir = &code[code.len() - 2..code.len() - 1];
-
-    (dir, dist)
 }
