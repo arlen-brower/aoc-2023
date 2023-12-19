@@ -1,8 +1,10 @@
+use core::ops::Range;
 use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::time::Instant;
 
+#[derive(Debug)]
 struct Rule {
     attr: char,
     op: char,
@@ -10,11 +12,20 @@ struct Rule {
     result: String,
 }
 
+#[derive(Copy, Clone, Eq, PartialEq)]
 struct Part {
     x: usize,
     m: usize,
     a: usize,
     s: usize,
+}
+
+#[derive(Clone, Eq, PartialEq)]
+struct PartsCombo {
+    x: Range<usize>,
+    m: Range<usize>,
+    a: Range<usize>,
+    s: Range<usize>,
 }
 
 fn main() {
@@ -81,7 +92,7 @@ fn solve(contents: &str) {
     for (id, part) in parts_vec.iter().enumerate() {
         let mut temp_str: String;
         let mut result: &String = &String::from("in");
-        while *result != "A" && *result != "R" {
+        while result != "A" && result != "R" {
             let workflow: &Vec<Rule> = work_map.get(result).unwrap();
             for rule in workflow {
                 let value = match rule.attr {
@@ -115,12 +126,12 @@ fn solve(contents: &str) {
                     }
                     _ => panic!(),
                 };
-                if *result != "no" {
+                if result != "no" {
                     break;
                 }
             }
         }
-        println!("Part {} : {}", id + 1, *result);
+        println!("Part {} : {}", id + 1, result);
         if *result == "A" {
             sum += part.x;
             sum += part.m;
@@ -129,6 +140,125 @@ fn solve(contents: &str) {
         }
     }
     println!("Part 1) {}", sum);
-    println!("Part 2) {}", 0);
+    println!(
+        "Part 2) {}",
+        possibilities(
+            &work_map,
+            "in",
+            PartsCombo {
+                x: 1..4001,
+                m: 1..4001,
+                a: 1..4001,
+                s: 1..4001
+            }
+        )
+    );
     println!("Expect) {}", 167409079868000);
+}
+
+fn possibilities(work_map: &HashMap<String, Vec<Rule>>, label: &str, parts: PartsCombo) -> usize {
+    println!("{:?}", parts.s);
+    if label == "A" {
+        // println!(
+        //     "{}",
+        //     (parts.x.end - parts.x.start)
+        //         * (parts.m.end - parts.m.start)
+        //         * (parts.a.end - parts.a.start)
+        //         * (parts.s.end - parts.s.start)
+        // );
+        return (parts.x.end - parts.x.start)
+            * (parts.m.end - parts.m.start)
+            * (parts.a.end - parts.a.start)
+            * (parts.s.end - parts.s.start);
+    }
+    if label == "R" {
+        return 0;
+    }
+    let workflow: &Vec<Rule> = work_map.get(label).unwrap();
+
+    println!("{:?}", workflow);
+    let mut cur_parts = parts.clone();
+    let mut rule_combos = 0;
+    for rule in workflow {
+        match rule.attr {
+            'x' => {
+                let (tr, fa) = modify_combo(&parts.x, rule.value, rule.op);
+                cur_parts = PartsCombo {
+                    x: tr,
+                    m: parts.m.clone(),
+                    a: parts.a.clone(),
+                    s: parts.s.clone(),
+                };
+                rule_combos += possibilities(work_map, &rule.result, cur_parts.clone());
+                cur_parts = PartsCombo {
+                    x: fa,
+                    m: parts.m.clone(),
+                    a: parts.a.clone(),
+                    s: parts.s.clone(),
+                };
+            }
+            'm' => {
+                let (tr, fa) = modify_combo(&parts.m, rule.value, rule.op);
+                cur_parts = PartsCombo {
+                    x: parts.x.clone(),
+                    m: tr,
+                    a: parts.a.clone(),
+                    s: parts.s.clone(),
+                };
+                rule_combos += possibilities(work_map, &rule.result, cur_parts.clone());
+
+                cur_parts = PartsCombo {
+                    x: parts.x.clone(),
+                    m: fa,
+                    a: parts.a.clone(),
+                    s: parts.s.clone(),
+                };
+            }
+            'a' => {
+                let (tr, fa) = modify_combo(&parts.a, rule.value, rule.op);
+                cur_parts = PartsCombo {
+                    x: parts.x.clone(),
+                    m: parts.m.clone(),
+                    a: tr,
+                    s: parts.s.clone(),
+                };
+                rule_combos += possibilities(work_map, &rule.result, cur_parts.clone());
+
+                cur_parts = PartsCombo {
+                    x: parts.x.clone(),
+                    m: parts.m.clone(),
+                    a: fa,
+                    s: parts.s.clone(),
+                };
+            }
+            's' => {
+                let (tr, fa) = modify_combo(&parts.s, rule.value, rule.op);
+                cur_parts = PartsCombo {
+                    x: parts.x.clone(),
+                    m: parts.m.clone(),
+                    a: parts.a.clone(),
+                    s: tr,
+                };
+                rule_combos += possibilities(work_map, &rule.result, cur_parts.clone());
+                cur_parts = PartsCombo {
+                    x: parts.x.clone(),
+                    m: parts.m.clone(),
+                    a: parts.a.clone(),
+                    s: fa,
+                };
+            }
+            'l' => rule_combos += possibilities(work_map, &rule.result, cur_parts.clone()),
+            _ => panic!(),
+        }
+    }
+
+    return rule_combos;
+}
+
+fn modify_combo(parts: &Range<usize>, num: usize, op: char) -> (Range<usize>, Range<usize>) {
+    if op == '<' {
+        (parts.start..num, num..parts.end)
+    } else {
+        (num + 1..parts.end, parts.start..num + 1)
+    }
 }
