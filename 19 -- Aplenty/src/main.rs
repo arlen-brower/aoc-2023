@@ -20,7 +20,7 @@ struct Part {
     s: usize,
 }
 
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 struct PartsCombo {
     x: Range<usize>,
     m: Range<usize>,
@@ -33,7 +33,9 @@ fn main() {
     let binding = fs::read_to_string(file_path).expect("Should have been able to read the file");
     let contents = binding.trim();
 
+    let start = Instant::now();
     solve(contents);
+    println!("---\ntime: {:?}", Instant::now().duration_since(start));
 }
 
 fn solve(contents: &str) {
@@ -139,25 +141,40 @@ fn solve(contents: &str) {
             sum += part.s;
         }
     }
-    println!("Part 1) {}", sum);
-    println!(
-        "Part 2) {}",
-        possibilities(
-            &work_map,
-            "in",
-            PartsCombo {
-                x: 1..4001,
-                m: 1..4001,
-                a: 1..4001,
-                s: 1..4001
-            }
-        )
+    let combs = possibilities(
+        &work_map,
+        "in",
+        PartsCombo {
+            x: 1..4001,
+            m: 1..4001,
+            a: 1..4001,
+            s: 1..4001,
+        },
     );
+    println!("Part 1) {}", sum);
+    println!("Part 2) {}", combs);
+    // A little cheating...
+    // println!("Expect) {}", 131796824371749);
+    // println!("Difference: {}", combs as f64 / 131796824371749.);
     println!("Expect) {}", 167409079868000);
+    println!("Difference: {}", combs as f64 / 167409079868000.);
 }
 
 fn possibilities(work_map: &HashMap<String, Vec<Rule>>, label: &str, parts: PartsCombo) -> usize {
-    println!("{:?}", parts.s);
+    let debug_map: HashMap<&str, usize> = HashMap::from([
+        ("in", 256000000000000),
+        ("qqz", 169600000000000),
+        ("px", 86400000000000),
+        ("qs", 78720000000000),
+        ("lnx", 43392000000000),
+        ("hdj", 40896000000000),
+        ("pv", 19039360000000),
+        ("gd", 8939515200000),
+        ("crn", 27987795000000),
+        ("qkq", 43308000000000),
+        ("rfg", 22515570000000),
+    ]);
+
     if label == "A" {
         // println!(
         //     "{}",
@@ -174,9 +191,18 @@ fn possibilities(work_map: &HashMap<String, Vec<Rule>>, label: &str, parts: Part
     if label == "R" {
         return 0;
     }
+    let actual = (parts.x.end - parts.x.start)
+        * (parts.m.end - parts.m.start)
+        * (parts.a.end - parts.a.start)
+        * (parts.s.end - parts.s.start);
+    let expected = debug_map.get(label).unwrap();
+    let ch = if *expected != actual { "❌" } else { "✅" };
+    println!("{label} {ch}");
+    println!("Actual: {}\nExpect: {}\n", actual, expected);
+    // println!("{:?}", parts.s);
     let workflow: &Vec<Rule> = work_map.get(label).unwrap();
 
-    println!("{:?}", workflow);
+    // println!("{:?}", workflow);
     let mut cur_parts = parts.clone();
     let mut rule_combos = 0;
     for rule in workflow {
@@ -247,7 +273,11 @@ fn possibilities(work_map: &HashMap<String, Vec<Rule>>, label: &str, parts: Part
                     s: fa,
                 };
             }
-            'l' => rule_combos += possibilities(work_map, &rule.result, cur_parts.clone()),
+            'l' => {
+                // println!("{label}");
+                // println!("{:?}", parts);
+                rule_combos += possibilities(work_map, &rule.result, cur_parts.clone())
+            }
             _ => panic!(),
         }
     }
@@ -259,6 +289,6 @@ fn modify_combo(parts: &Range<usize>, num: usize, op: char) -> (Range<usize>, Ra
     if op == '<' {
         (parts.start..num, num..parts.end)
     } else {
-        (num + 1..parts.end, parts.start..num + 1)
+        (num..parts.end, parts.start..num + 1)
     }
 }
