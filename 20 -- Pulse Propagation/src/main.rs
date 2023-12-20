@@ -80,12 +80,25 @@ fn solve(contents: &str) -> i32 {
     let mut high_count = 0;
     let mut low_count = 0;
 
-    for _ in 0..1000 {
+    let mut p1;
+    let mut p2 = 0;
+    let mut i: i64 = 0;
+    while p2 == 0 {
         //Push button
         q.push_back(("button", "broadcaster", 'l'));
+        i += 1;
+        if i == 1000 {
+            p1 = low_count * high_count;
+            println!("Part 1)\n {}", p1);
+        }
 
+        let mut rx_low = 0;
         while !q.is_empty() {
             let (src, dest, pulse_type) = q.pop_front().unwrap();
+
+            if dest == "rx" && pulse_type == 'l' {
+                rx_low += 1;
+            }
 
             let (node_type, conns) = match node_map.get(dest) {
                 Some(n) => n,
@@ -164,7 +177,11 @@ fn solve(contents: &str) -> i32 {
                 _ => panic!(),
             }
         }
+        if rx_low == 1 {
+            p2 = i;
+        }
     }
-    println!("Low: {}\nHigh: {}", low_count, high_count);
+    println!("Part 2)\n {}", p2);
+    // println!("Low: {}\nHigh: {}", low_count, high_count);
     low_count * high_count
 }
