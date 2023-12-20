@@ -30,15 +30,23 @@ struct PartsCombo {
 
 fn main() {
     let file_path = env::args().nth(1).unwrap_or("test_input".to_string());
-    let binding = fs::read_to_string(file_path).expect("Should have been able to read the file");
+    let binding = fs::read_to_string(&file_path).expect("Should have been able to read the file");
     let contents = binding.trim();
 
     let start = Instant::now();
-    solve(contents);
+    let combs = solve(contents);
+    // A little cheating...
+    if file_path == "input" {
+        println!("Expect) {}", 131796824371749);
+        println!("Difference: {}", combs as f64 / 131796824371749.);
+    } else {
+        println!("Expect) {}", 167409079868000);
+        println!("Difference: {}", combs as f64 / 167409079868000.);
+    }
     println!("---\ntime: {:?}", Instant::now().duration_since(start));
 }
 
-fn solve(contents: &str) {
+fn solve(contents: &str) -> usize {
     let mut work_map: HashMap<String, Vec<Rule>> = HashMap::new();
     let mut parts_vec: Vec<Part> = Vec::new();
 
@@ -153,11 +161,7 @@ fn solve(contents: &str) {
     );
     println!("Part 1) {}", sum);
     println!("Part 2) {}", combs);
-    // A little cheating...
-    // println!("Expect) {}", 131796824371749);
-    // println!("Difference: {}", combs as f64 / 131796824371749.);
-    println!("Expect) {}", 167409079868000);
-    println!("Difference: {}", combs as f64 / 167409079868000.);
+    combs
 }
 
 fn possibilities(work_map: &HashMap<String, Vec<Rule>>, label: &str, parts: PartsCombo) -> usize {
@@ -290,10 +294,10 @@ fn possibilities(work_map: &HashMap<String, Vec<Rule>>, label: &str, parts: Part
 
 fn modify_combo(parts: &Range<usize>, num: usize, op: char) -> (Range<usize>, Range<usize>) {
     if op == '<' {
-        let num = std::cmp::min(num, parts.end);
+        // let num = std::cmp::min(num, parts.end);
         (parts.start..num, num..parts.end)
     } else {
-        let num = std::cmp::max(num, parts.start);
+        // let num = std::cmp::max(num, parts.start);
         (num + 1..parts.end, parts.start..num + 1)
     }
 }
