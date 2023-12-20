@@ -214,7 +214,7 @@ fn possibilities(work_map: &HashMap<String, Vec<Rule>>, label: &str, parts: Part
     for rule in workflow {
         match rule.attr {
             'x' => {
-                let (tr, fa) = modify_combo(&parts.x, rule.value, rule.op);
+                let (tr, fa) = modify_combo(&cur_parts.x, rule.value, rule.op);
                 cur_parts = PartsCombo {
                     x: tr,
                     m: cur_parts.m.clone(),
@@ -230,7 +230,7 @@ fn possibilities(work_map: &HashMap<String, Vec<Rule>>, label: &str, parts: Part
                 };
             }
             'm' => {
-                let (tr, fa) = modify_combo(&parts.m, rule.value, rule.op);
+                let (tr, fa) = modify_combo(&cur_parts.m, rule.value, rule.op);
                 cur_parts = PartsCombo {
                     x: cur_parts.x.clone(),
                     m: tr,
@@ -247,7 +247,7 @@ fn possibilities(work_map: &HashMap<String, Vec<Rule>>, label: &str, parts: Part
                 };
             }
             'a' => {
-                let (tr, fa) = modify_combo(&parts.a, rule.value, rule.op);
+                let (tr, fa) = modify_combo(&cur_parts.a, rule.value, rule.op);
                 cur_parts = PartsCombo {
                     x: cur_parts.x.clone(),
                     m: cur_parts.m.clone(),
@@ -264,7 +264,7 @@ fn possibilities(work_map: &HashMap<String, Vec<Rule>>, label: &str, parts: Part
                 };
             }
             's' => {
-                let (tr, fa) = modify_combo(&parts.s, rule.value, rule.op);
+                let (tr, fa) = modify_combo(&cur_parts.s, rule.value, rule.op);
 
                 cur_parts = PartsCombo {
                     x: cur_parts.x.clone(),
@@ -294,10 +294,10 @@ fn possibilities(work_map: &HashMap<String, Vec<Rule>>, label: &str, parts: Part
 
 fn modify_combo(parts: &Range<usize>, num: usize, op: char) -> (Range<usize>, Range<usize>) {
     if op == '<' {
-        // let num = std::cmp::min(num, parts.end);
+        let num = std::cmp::min(num, parts.end);
         (parts.start..num, num..parts.end)
     } else {
-        // let num = std::cmp::max(num, parts.start);
+        let num = std::cmp::max(num, parts.start);
         (num + 1..parts.end, parts.start..num + 1)
     }
 }
