@@ -133,7 +133,7 @@ fn solve(contents: &str) {
                 }
             }
         }
-        println!("Part {} : {}", id + 1, result);
+        // println!("Part {} : {}", id + 1, result);
         if *result == "A" {
             sum += part.x;
             sum += part.m;
