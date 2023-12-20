@@ -11,8 +11,7 @@ fn main() {
 
     let start = Instant::now();
 
-    let p1 = solve(contents);
-    println!("Part 1) {}", p1);
+    solve(contents);
 
     println!("---\ntime: {:?}", Instant::now().duration_since(start));
 }
@@ -24,7 +23,7 @@ enum PowerState {
 
 use PowerState::*;
 
-fn solve(contents: &str) -> i32 {
+fn solve(contents: &str) {
     // HashMap<label, (type, Vec<label>)
     let mut node_map: HashMap<&str, (char, Vec<&str>)> = HashMap::new();
     let mut conj_map: HashMap<&str, HashMap<&str, char>> = HashMap::new();
@@ -80,6 +79,11 @@ fn solve(contents: &str) -> i32 {
     let mut high_count = 0;
     let mut low_count = 0;
 
+    let mut pk = -1;
+    let mut hf = -1;
+    let mut mk = -1;
+    let mut pm = -1;
+
     let mut p1;
     let mut p2 = 0;
     let mut i: i64 = 0;
@@ -89,7 +93,7 @@ fn solve(contents: &str) -> i32 {
         i += 1;
         if i == 1000 {
             p1 = low_count * high_count;
-            println!("Part 1)\n {}", p1);
+            println!("Part 1)\n{}\n", p1);
         }
 
         let mut rx_low = 0;
@@ -113,6 +117,24 @@ fn solve(contents: &str) -> i32 {
                     continue;
                 }
             };
+
+            if pk < 0 && src == "pk" && pulse_type == 'h' {
+                pk = i;
+            }
+            if mk < 0 && src == "mk" && pulse_type == 'h' {
+                mk = i;
+            }
+            if hf < 0 && src == "hf" && pulse_type == 'h' {
+                hf = i;
+            }
+            if pm < 0 && src == "pm" && pulse_type == 'h' {
+                pm = i;
+            }
+
+            if pk > 0 && mk > 0 && hf > 0 && pm > 0 {
+                println!("Part 2)\n{}", lcm(&[pk, mk, hf, pm]));
+                return;
+            }
 
             if pulse_type == 'l' {
                 low_count += 1;
@@ -183,5 +205,19 @@ fn solve(contents: &str) -> i32 {
     }
     println!("Part 2)\n {}", p2);
     // println!("Low: {}\nHigh: {}", low_count, high_count);
-    low_count * high_count
+}
+fn lcm(nums: &[i64]) -> i64 {
+    if nums.len() == 1 {
+        return nums[0];
+    }
+    let a = nums[0];
+    let b = lcm(&nums[1..]);
+    a * b / gcd_of_two_numbers(a, b)
+}
+
+fn gcd_of_two_numbers(a: i64, b: i64) -> i64 {
+    if b == 0 {
+        return a;
+    }
+    gcd_of_two_numbers(b, a % b)
 }
