@@ -263,16 +263,16 @@ fn possibilities(work_map: &HashMap<String, Vec<Rule>>, label: &str, parts: Part
                 let (tr, fa) = modify_combo(&parts.s, rule.value, rule.op);
 
                 cur_parts = PartsCombo {
-                    x: parts.x.clone(),
-                    m: parts.m.clone(),
-                    a: parts.a.clone(),
+                    x: cur_parts.x.clone(),
+                    m: cur_parts.m.clone(),
+                    a: cur_parts.a.clone(),
                     s: tr,
                 };
                 rule_combos += possibilities(work_map, &rule.result, cur_parts.clone());
                 cur_parts = PartsCombo {
-                    x: parts.x.clone(),
-                    m: parts.m.clone(),
-                    a: parts.a.clone(),
+                    x: cur_parts.x.clone(),
+                    m: cur_parts.m.clone(),
+                    a: cur_parts.a.clone(),
                     s: fa,
                 };
             }
