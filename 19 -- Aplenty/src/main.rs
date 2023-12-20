@@ -191,14 +191,16 @@ fn possibilities(work_map: &HashMap<String, Vec<Rule>>, label: &str, parts: Part
     if label == "R" {
         return 0;
     }
+
     let actual = (parts.x.end - parts.x.start)
         * (parts.m.end - parts.m.start)
         * (parts.a.end - parts.a.start)
         * (parts.s.end - parts.s.start);
-    let expected = debug_map.get(label).unwrap();
-    let ch = if *expected != actual { "❌" } else { "✅" };
-    println!("{label} {ch}");
-    println!("Actual: {}\nExpect: {}\n", actual, expected);
+
+    // let expected = debug_map.get(label).unwrap();
+    // let ch = if *expected != actual { "❌" } else { "✅" };
+    // println!("{label} {ch}");
+    // println!("Actual: {}\nExpect: {}\n", actual, expected);
     // println!("{:?}", parts.s);
     let workflow: &Vec<Rule> = work_map.get(label).unwrap();
 
@@ -211,54 +213,55 @@ fn possibilities(work_map: &HashMap<String, Vec<Rule>>, label: &str, parts: Part
                 let (tr, fa) = modify_combo(&parts.x, rule.value, rule.op);
                 cur_parts = PartsCombo {
                     x: tr,
-                    m: parts.m.clone(),
-                    a: parts.a.clone(),
-                    s: parts.s.clone(),
+                    m: cur_parts.m.clone(),
+                    a: cur_parts.a.clone(),
+                    s: cur_parts.s.clone(),
                 };
                 rule_combos += possibilities(work_map, &rule.result, cur_parts.clone());
                 cur_parts = PartsCombo {
                     x: fa,
-                    m: parts.m.clone(),
-                    a: parts.a.clone(),
-                    s: parts.s.clone(),
+                    m: cur_parts.m.clone(),
+                    a: cur_parts.a.clone(),
+                    s: cur_parts.s.clone(),
                 };
             }
             'm' => {
                 let (tr, fa) = modify_combo(&parts.m, rule.value, rule.op);
                 cur_parts = PartsCombo {
-                    x: parts.x.clone(),
+                    x: cur_parts.x.clone(),
                     m: tr,
-                    a: parts.a.clone(),
-                    s: parts.s.clone(),
+                    a: cur_parts.a.clone(),
+                    s: cur_parts.s.clone(),
                 };
                 rule_combos += possibilities(work_map, &rule.result, cur_parts.clone());
 
                 cur_parts = PartsCombo {
-                    x: parts.x.clone(),
+                    x: cur_parts.x.clone(),
                     m: fa,
-                    a: parts.a.clone(),
-                    s: parts.s.clone(),
+                    a: cur_parts.a.clone(),
+                    s: cur_parts.s.clone(),
                 };
             }
             'a' => {
                 let (tr, fa) = modify_combo(&parts.a, rule.value, rule.op);
                 cur_parts = PartsCombo {
-                    x: parts.x.clone(),
-                    m: parts.m.clone(),
+                    x: cur_parts.x.clone(),
+                    m: cur_parts.m.clone(),
                     a: tr,
-                    s: parts.s.clone(),
+                    s: cur_parts.s.clone(),
                 };
                 rule_combos += possibilities(work_map, &rule.result, cur_parts.clone());
 
                 cur_parts = PartsCombo {
-                    x: parts.x.clone(),
-                    m: parts.m.clone(),
+                    x: cur_parts.x.clone(),
+                    m: cur_parts.m.clone(),
                     a: fa,
-                    s: parts.s.clone(),
+                    s: cur_parts.s.clone(),
                 };
             }
             's' => {
                 let (tr, fa) = modify_combo(&parts.s, rule.value, rule.op);
+
                 cur_parts = PartsCombo {
                     x: parts.x.clone(),
                     m: parts.m.clone(),
@@ -287,8 +290,10 @@ fn possibilities(work_map: &HashMap<String, Vec<Rule>>, label: &str, parts: Part
 
 fn modify_combo(parts: &Range<usize>, num: usize, op: char) -> (Range<usize>, Range<usize>) {
     if op == '<' {
+        let num = std::cmp::min(num, parts.end);
         (parts.start..num, num..parts.end)
     } else {
-        (num..parts.end, parts.start..num + 1)
+        let num = std::cmp::max(num, parts.start);
+        (num + 1..parts.end, parts.start..num + 1)
     }
 }
