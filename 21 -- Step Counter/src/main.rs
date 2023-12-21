@@ -5,6 +5,8 @@ use std::env;
 use std::fs;
 use std::time::Instant;
 
+const DEBUG: bool = false;
+
 fn main() {
     let file_path = env::args().nth(1).unwrap_or("test_input".to_string());
     let binding = fs::read_to_string(&file_path).expect("Should have been able to read the file");
@@ -12,18 +14,34 @@ fn main() {
 
     let start = Instant::now();
 
-    solve(contents);
+    let p1 = solve(contents, 64);
+    let mut result;
+    if p1 == 3503 {
+        result = "✅"
+    } else {
+        result = "❌"
+    }
+    println!("Part 1) {} {}", p1, result);
+    let x = 26501365;
 
+    let p2: i128 = ((14275 * x * x) / 17161 + (27637 * x) / 17161 - 225714 / 17161) + 1;
+
+    if p2 == 584211423220706 {
+        result = "✅"
+    } else {
+        result = "❌"
+    }
+    println!("Part 2) {} {}", p2, result);
     println!("---\ntime: {:?}", Instant::now().duration_since(start));
 }
 
-fn solve(contents: &str) {
-    let mut layout: HashMap<(i64, i64), char> = HashMap::new();
-    let mut steps: HashSet<(i64, i64, i64)> = HashSet::new();
+fn solve(contents: &str, step_limit: i128) -> i128 {
+    let mut layout: HashMap<(i128, i128), char> = HashMap::new();
+    let mut steps: HashSet<(i128, i128, i128)> = HashSet::new();
     let mut row = 0;
     let mut col = 0;
 
-    let mut start: (i64, i64) = (0, 0);
+    let mut start: (i128, i128) = (0, 0);
 
     for line in contents.lines() {
         col = 0;
@@ -42,20 +60,19 @@ fn solve(contents: &str) {
     let max_rows = row;
     let max_cols = col;
 
-    let mut visited: HashSet<(i64, i64)> = HashSet::new();
-    let mut q: VecDeque<(i64, i64, i64)> = VecDeque::new();
+    let mut visited: HashSet<(i128, i128)> = HashSet::new();
+    let mut q: VecDeque<(i128, i128, i128)> = VecDeque::new();
 
-    q.push_back((start.0 as i64, start.1 as i64, 0));
-    steps.insert((start.0 as i64, start.1 as i64, 0));
+    q.push_back((start.0 as i128, start.1 as i128, 0));
+    steps.insert((start.0 as i128, start.1 as i128, 0));
 
-    let mut canvas_min_r: i64 = 0;
-    let mut canvas_min_c: i64 = 0;
-    let mut canvas_max_r: i64 = max_rows as i64;
-    let mut canvas_max_c: i64 = max_cols as i64;
+    let mut canvas_min_r: i128 = 0;
+    let mut canvas_min_c: i128 = 0;
+    let mut canvas_max_r: i128 = max_rows as i128;
+    let mut canvas_max_c: i128 = max_cols as i128;
 
-    let step_limit = 100;
     while let Some((r, c, step)) = q.pop_front() {
-        let mut n: Vec<(i64, i64)> = Vec::new();
+        let mut n: Vec<(i128, i128)> = Vec::new();
 
         if step > step_limit {
             continue;
@@ -117,45 +134,48 @@ fn solve(contents: &str) {
         }
     }
 
-    let filtered_map: HashSet<(i64, i64)> = steps
+    let even_odd = step_limit % 2;
+
+    let filtered_map: HashSet<(i128, i128)> = steps
         .iter()
-        .filter(|(_, _, step)| step % 2 == 0)
+        .filter(|(_, _, step)| step % 2 == even_odd)
         .map(|(r, c, _)| (*r, *c))
         .collect();
-
-    print_map(
-        &layout,
-        &filtered_map,
-        canvas_min_r,
-        canvas_min_c,
-        canvas_max_r,
-        canvas_max_c,
-        max_rows,
-        max_cols,
-    );
-    println!("{}", filtered_map.len());
+    if DEBUG {
+        print_map(
+            &layout,
+            &filtered_map,
+            canvas_min_r,
+            canvas_min_c,
+            canvas_max_r,
+            canvas_max_c,
+            max_rows,
+            max_cols,
+        );
+    }
+    filtered_map.len() as i128
 }
 
-fn modulo(a: i64, b: i64) -> i64 {
+fn modulo(a: i128, b: i128) -> i128 {
     ((a % b) + b) % b
 }
 
 fn print_map(
-    layout: &HashMap<(i64, i64), char>,
-    visited: &HashSet<(i64, i64)>,
-    min_rows: i64,
-    min_cols: i64,
-    max_rows: i64,
-    max_cols: i64,
-    mr: i64,
-    mc: i64,
+    layout: &HashMap<(i128, i128), char>,
+    visited: &HashSet<(i128, i128)>,
+    min_rows: i128,
+    min_cols: i128,
+    max_rows: i128,
+    max_cols: i128,
+    mr: i128,
+    mc: i128,
 ) -> () {
-    for r in min_rows..max_rows {
-        for c in min_cols..max_cols {
+    for r in min_rows..=max_rows {
+        for c in min_cols..=max_cols {
             match layout.get(&(modulo(r, mr), modulo(c, mc))) {
                 Some(ch) => {
                     if visited.contains(&(r, c)) {
-                        print!(".");
+                        print!("O");
                     } else {
                         print!("{ch}");
                     }
