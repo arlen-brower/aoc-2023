@@ -163,19 +163,19 @@ fn solve(contents: &str) {
     // println!("---");
     debug_print(&mut occupied);
     //
-    print!("   1 ");
-    for i in 2..max_id {
-        print!("{} ", i);
-    }
-    println!();
-
-    for i in 1..max_id {
-        print!("{} |", i);
-        for s in 1..max_id {
-            print!("{} ", support_map[i][s]);
-        }
-        println!();
-    }
+    // print!("   1 ");
+    // for i in 2..max_id {
+    //     print!("{} ", i);
+    // }
+    // println!();
+    //
+    // for i in 1..max_id {
+    //     print!("{} |", i);
+    //     for s in 1..max_id {
+    //         print!("{} ", support_map[i][s]);
+    //     }
+    //     println!();
+    // }
 
     let mut dis_count = 0;
     for c in 1..max_id {
@@ -192,11 +192,16 @@ fn solve(contents: &str) {
         }
         if dis {
             dis_count += 1;
-            println!("Can disintegrate block {}", c);
+            // println!("Can disintegrate block {}", c);
         }
     }
     println!("Part 1) {}", dis_count);
 
+    let mut p2 = 0;
+    for i in 1..max_id {
+        p2 += num_destroyed(&support_map, i, &mut HashSet::new(), max_id);
+    }
+    println!("Part 2) {}", p2);
     // for i in 1..max_id {
     //     for s in 1..max_id {
     //         if support_map[i][s] == 1 {
@@ -215,9 +220,43 @@ fn solve(contents: &str) {
     // }
 }
 
+fn num_destroyed(
+    support_map: &Vec<Vec<usize>>,
+    target: usize,
+    destroyed: &mut HashSet<usize>,
+    max_id: usize,
+) -> usize {
+    let mut bricks_fall = 0;
+    let mut new_dest: Vec<usize> = Vec::new();
+    destroyed.insert(target);
+    for r in 1..max_id {
+        if support_map[r][target] == 1 {
+            // if we are supporting something
+            let check = &support_map[r];
+            let mut filter = true;
+            for (id, ch) in check.iter().enumerate() {
+                if *ch == 1 && !destroyed.contains(&id) {
+                    filter = false;
+                }
+            }
+            if !destroyed.contains(&r) && filter {
+                new_dest.push(r);
+                destroyed.insert(r);
+                bricks_fall += 1;
+            }
+        }
+    }
+
+    for n in new_dest {
+        bricks_fall += num_destroyed(&support_map, n, destroyed, max_id);
+    }
+
+    bricks_fall
+}
+
 fn debug_print(occupied: &mut HashMap<(i32, i32, i32), usize>) {
-    for z in (1..400).rev() {
-        print!("{}|", z);
+    for z in (1..178).rev() {
+        print!("{:>3}|", z);
         for y in 0..10 {
             let mut ch = '.';
             for x in 0..10 {
