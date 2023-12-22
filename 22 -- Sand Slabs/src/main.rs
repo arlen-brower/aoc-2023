@@ -263,7 +263,7 @@ fn move_brick(
             label: block.label,
         };
 
-        if new_block.z <= 1 {
+        if new_block.z < 1 {
             collides = true;
             supports.push(0); // 0 means ground
         }
