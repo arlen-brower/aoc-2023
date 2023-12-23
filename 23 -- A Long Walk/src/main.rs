@@ -54,7 +54,7 @@ fn main() {
     //     println!();
     // }
 
-    let distance = distances(&char_map, start_pos);
+    let distance = distances(&char_map, start_pos, goal);
 
     for r in 0..rows {
         for c in 0..cols {
@@ -162,6 +162,7 @@ impl PartialOrd for SearchPath {
 fn distances(
     grid: &HashMap<(usize, usize), char>,
     start: (usize, usize),
+    goal: (usize, usize),
 ) -> HashMap<(usize, usize), usize> {
     let mut distance: HashMap<(usize, usize), usize> = HashMap::new();
 
@@ -178,17 +179,20 @@ fn distances(
         path: start_path,
     });
 
+    let mut max_dist: Vec<usize> = Vec::new();
+
     while let Some(SearchPath { dist, r, c, path }) = q.pop() {
-        if let Some(old_dist) = distance.get(&(r, c)) {
-            if *old_dist > dist {
-                continue;
-            }
+        if r == goal.0 && c == goal.1 {
+            max_dist.push(dist);
+            println!("{dist}");
+            continue;
         }
-        let neighbours = get_neighbours(&grid, (r, c), false);
+
+        let neighbours = get_neighbours(&grid, (r, c), true);
 
         for (nr, nc) in neighbours {
             let next_dist = dist + 1;
-            if next_dist > *(distance.get(&(nr, nc)).unwrap_or(&0)) && !path.contains(&(nr, nc)) {
+            if !path.contains(&(nr, nc)) {
                 let mut next_path = path.clone();
                 next_path.insert((nr, nc));
                 let next = SearchPath {
@@ -202,6 +206,7 @@ fn distances(
             }
         }
     }
+    println!("Max: {}", max_dist.iter().max().unwrap());
     distance
 }
 
