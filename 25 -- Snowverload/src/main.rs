@@ -65,5 +65,5 @@ fn bfs(graph: &HashMap<&str, Vec<&str>>, start: &str) {
             }
         }
     }
-    println!("Visited {} nodes", visited.len());
+    eprintln!("Visited {} nodes", visited.len());
 }
