@@ -150,6 +150,7 @@ impl Ord for SearchPath {
         self.dist
             .cmp(&other.dist)
             .then_with(|| self.r.cmp(&other.r))
+            .then_with(|| self.c.cmp(&other.c))
     }
 }
 
